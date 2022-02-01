@@ -73,31 +73,61 @@
          <br />
          <div class="row">
             <div class="col-xs-6 text-center">
-               <form id="entry" method="POST" action="/_check">
-                  <label for="attempt">Word:</label>
-                  <input id="attempt" name="attempt" type="text" width="15"
+               <form id="entry" method="GET" action="/_check">
+		  <label for="attempt">Word:</label>
+                  <input id="attempt" name="attempt" type="word" width="15"
                      autocomplete="off"  autofocus />
-                  <input type="submit" name="try" />
                </form>
             </div>
          </div>
+	<p id="wordTyped"> </p>
+	<p id = "response"></p>
+	<p id = "left"></p>
+	<p id="results"> </p>
+	<script>
+		$("#entry").submit( function(event) {
+			event.preventDefault();
+		});
+		
+	
+		$("#attempt").keyup(function(event) {
+			var txt = $("#attempt").val();
+			console.log(txt);
+			$("#wordTyped").html(txt);
+		$.getJSON("/_check", {text: txt},
+			function(data) {
+				target = data.result.amount;
+				numCorrect = data.result.done;
+				matche = data.result.matches
+				correct = data.result.correct
+				if(numCorrect === target){
+					window.location.href = "/success";
+				}else if(correct === true){
+					var left = target - numCorrect
+					$("#response").html("Good job " + txt + " is in the jumble!")
+					var leftStr = " you have to find " + left + " more word"
+					if(left !== 1){
+						leftStr += "s"
+					}
+					$("#left").html(leftStr)
+					$("#results").html("You have found: " + matche);
+				}else if(correct === false && !!txt){
+					var left = target - numCorrect
+					$("#response").html(txt + " is not in the jumble");
+					var leftStr = " you have to find " + left + " more word"
+					if(left !== 1){
+						leftStr += "s"
+					}
+					$("#left").html(leftStr)
+					if(numCorrect !== 0){
+						$("#results").html("you have found: " + matche)
+					}
+				}
+			}
+		);
+	});
+	</script>
          <br />
-         {% if session.matches|length is not equalto 0  %}
-         <h2>You found </h2>
-         <p id="results">
-            {% for match in session.matches %}
-            {{ match }}
-            {% endfor %}
-         </p>
-         {% endif %}
-         {% with messages = get_flashed_messages() %}
-         {% if messages %}
-         <!-- Mismatch, already found, etc. "flashed" from Python -->
-         {% for message in messages %}
-         <p class="message">{{ message }}</p>
-         {% endfor %}
-         {% endif %}
-         {% endwith %}
       </div>
       <!-- container -->
    </body>
